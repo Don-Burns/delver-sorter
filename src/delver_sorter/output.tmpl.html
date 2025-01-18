@@ -8,6 +8,20 @@
             background-color: #FFCECE;
             /* Light red highlight */
         }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 
@@ -15,12 +29,12 @@
     <table>
         <thead>
             <tr>
-                <th>Card Name</th>
-                <th>CMC</th>
-                <th>Color ID</th>
-                <th>Mana Cost</th>
-                <th>Owned</th>
-                <th>Incoming</th>
+                <th onclick="sortTable(0)">Card Name</th>
+                <th onclick="sortTable(1)">CMC</th>
+                <th onclick="sortTable(2)">Color ID</th>
+                <th onclick="sortTable(3)">Mana Cost</th>
+                <th onclick="sortTable(4)">Owned</th>
+                <th onclick="sortTable(5)">Incoming</th>
             </tr>
         </thead>
         <tbody>
@@ -30,12 +44,49 @@
                 <td>{{ card.cmc }}</td>
                 <td>{{ card.color_id }}</td>
                 <td>{{ card.mana_cost }}</td>
-                <td>{% if card.owned %}{{ card.owned }}{% else %}0{% endif %}</td>
-                <td>{% if card.incoming %}{{ card.incoming }}{% else %}0{% endif %}</td>
+                <td>{% if card.owned %}{{ card.owned }}{% else %}Not Owned{% endif %}</td>
+                <td>{% if card.incoming %}{{ card.incoming }}{% else %}N/A{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <script>
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch;
+            table = document.getElementsByTagName("table")[0];
+            switching = true;
+            /*Make a loop that will continue until
+            no switching has been done:*/
+            while (switching) {
+                //start by saying: no switching is done:
+                switching = false;
+                rows = table.rows;
+                /*Loop through all table rows (except the
+                first, which contains table headers):*/
+                for (i = 1; i < (rows.length - 1); i++) {
+                    //start by saying there should be no switching:
+                    shouldSwitch = false;
+                    /*Get the two elements you want to compare,
+                    one from current row and one from the next:*/
+                    x = rows[i].getElementsByTagName("td")[n];
+                    y = rows[i + 1].getElementsByTagName("td")[n];
+                    //check if the two rows should switch place:
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        //if so, mark as a switch and break the loop:
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                if (shouldSwitch) {
+                    /*If a switch has been marked, make the switch
+                    and mark that a switch has been done:*/
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>
