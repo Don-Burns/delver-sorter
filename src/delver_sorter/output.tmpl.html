@@ -36,18 +36,12 @@
 </head>
 
 <body>
-    <select id="sortColumns" multiple>
-        <option value="name_asc">Card Name (Ascending)</option>
-        <option value="name_desc">Card Name (Descending)</option>
-        <option value="cmc_asc">CMC (Ascending)</option>
-        <option value="cmc_desc">CMC (Descending)</option>
-        <option value="color_asc">Color ID (Ascending)</option>
-        <option value="color_desc">Color ID (Descending)</option>
-        <option value="owned_asc">Owned (Ascending)</option>
-        <option value="owned_desc">Owned (Descending)</option>
-        <option value="incoming_asc">Incoming (Ascending)</option>
-        <option value="incoming_desc">Incoming (Descending)</option>
+    <!-- This is built programmatically with JS -->
+    <select id="sortColumns" multiple style="overflow: hidden;">
     </select>
+    <!-- This is built programmatically with JS -->
+    <div id="selectedColumns" style="padding: 1em;">
+    </div>
 
     <table>
         <thead>
@@ -67,50 +61,58 @@
                 <td>{{ card.cmc }}</td>
                 <td>{{ card.color_id }}</td>
                 <td>{{ card.mana_cost }}</td>
-                <td>{% if card.owned %}{{ card.owned }}{% else %}Not Owned{% endif %}</td>
-                <td>{% if card.incoming %}{{ card.incoming }}{% else %}N/A{% endif %}</td>
+                <td>{% if card.owned %}{{ card.owned }}{% else %}0{% endif %}</td>
+                <td>{% if card.incoming %}{{ card.incoming }}{% else %}0{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
+    <!-- Sorting logic -->
     <script>
-        const sortColumns = document.getElementById('sortColumns');
+        /**
+            * Get a hash map of column names to their index in the table
+            * @param {HTMLTableElement} table
+            * @returns {Map} A hash map of column names to their column index in the table
+            * E.g. { 'Card Name': 0, 'CMC': 1, ... } for a table with columns 'Card Name', 'CMC', ...
+            */
+        function getColumnNameHashMap(table) {
+            const thead = table.querySelector('thead'); // Get the thead element
+            const ths = thead.querySelectorAll('th'); // Get all th elements within thead
 
-        sortColumns.addEventListener('change', () => {
-            const selectedSorts = Array.from(sortColumns.selectedOptions).map(option => option.value);
+            const columnNames = Array.from(ths).map(th => th.textContent.trim());
+            const columnNameToIndex = {};
+            columnNames.forEach((columnName, index) => {
+                columnNameToIndex[columnName] = index;
+            });
+            return columnNameToIndex;
+        };
 
+        /**
+         * Split a string on the last occurrence of a character
+         * @param {string} str The string to split
+         * @param {string} char The character to split on
+         * @returns {Array<string>} An array containing the string split into two parts
+         * E.g. splitOnLastOccurrenceOfChar('Card Name asc', ' ') => ['Card Name', 'asc']
+         */
+        function splitOnLastOccurrenceOfChar(str, char) {
+            const lastIndex = str.lastIndexOf(char);
+            return [str.slice(0, lastIndex), str.slice(lastIndex + 1)];
+        }
+
+        function sortTable(selectedCols) {
             const table = document.getElementsByTagName("table")[0];
-            const rows = Array.from(table.rows).slice(1); // Exclude header row
+            const headerMap = getColumnNameHashMap(table);
+            const tableRows = Array.from(table.tBodies[0].rows);
 
-            rows.sort((a, b) => {
-                for (const selectedSort of selectedSorts) {
+            // Sorting is based on the return val, lower val comes first
+            tableRows.sort((a, b) => {
+                for (const selectedSort of selectedCols) {
                     let comparison = 0;
-                    const [column, order] = selectedSort.split('_');
+                    const [column, order] = splitOnLastOccurrenceOfChar(selectedSort, ' ');
+                    i = headerMap[column];
 
-                    switch (column) {
-                        case 'name':
-                            comparison = order === 'asc' ? a.cells[0].innerHTML.localeCompare(b.cells[0].innerHTML) : b.cells[0].innerHTML.localeCompare(a.cells[0].innerHTML);
-                            break;
-                        case 'cmc':
-                            comparison = order === 'asc' ? a.cells[1].innerHTML - b.cells[1].innerHTML : b.cells[1].innerHTML - a.cells[1].innerHTML;
-                            break;
-                        case 'color':
-                            comparison = order === 'asc' ? a.cells[2].innerHTML.localeCompare(b.cells[2].innerHTML) : b.cells[2].innerHTML.localeCompare(a.cells[2].innerHTML);
-                            break;
-                        case 'owned':
-                            // Handle potential "Not Owned" string
-                            const ownedA = a.cells[4].innerHTML === "Not Owned" ? 0 : parseInt(a.cells[4].innerHTML);
-                            const ownedB = b.cells[4].innerHTML === "Not Owned" ? 0 : parseInt(b.cells[4].innerHTML);
-                            comparison = order === 'asc' ? ownedA - ownedB : ownedB - ownedA;
-                            break;
-                        case 'incoming':
-                            // Handle potential "N/A" string
-                            const incomingA = a.cells[5].innerHTML === "N/A" ? 0 : parseInt(a.cells[5].innerHTML);
-                            const incomingB = b.cells[5].innerHTML === "N/A" ? 0 : parseInt(b.cells[5].innerHTML);
-                            comparison = order === 'asc' ? incomingA - incomingB : incomingB - incomingA;
-                            break;
-                    }
+                    comparison = order === 'asc' ? a.cells[i].innerHTML.localeCompare(b.cells[i].innerHTML) : b.cells[i].innerHTML.localeCompare(a.cells[i].innerHTML);
 
                     if (comparison !== 0) {
                         return comparison;
@@ -121,11 +123,46 @@
             });
 
             // Re-insert sorted rows
-            for (const row of rows) {
+            for (const row of tableRows) {
                 table.tBodies[0].appendChild(row);
             }
+        }
+
+        // Get the columns that are selected for sorting
+        const sortColumns = document.getElementById('sortColumns');
+        // Add a listener for changes to the selection
+        sortColumns.addEventListener('change', () => {
+            const selectedCols = Array.from(sortColumns.selectedOptions).map(option => option.value);
+            document.getElementById('selectedColumns').textContent = `Sorting by: ${selectedCols.join(', ')}`;
+            sortTable(selectedCols);
         });
     </script>
+
+    <!-- Styling logic -->
+    <script>
+
+        const select = document.getElementById('sortColumns');
+        // Add the options based on the table headers
+        const table = document.getElementsByTagName("table")[0];
+        const thead = table.querySelector('thead');
+        const ths = thead.querySelectorAll('th');
+        const columnNames = Array.from(ths).map(th => th.textContent.trim());
+        for (const columnName of columnNames) {
+            const optionAsc = document.createElement('option');
+            optionAsc.value = `${columnName} asc`;
+            optionAsc.textContent = `${columnName} (Ascending)`;
+            select.appendChild(optionAsc);
+
+            const optionDesc = document.createElement('option');
+            optionDesc.value = `${columnName} desc`;
+            optionDesc.textContent = `${columnName} (Descending)`;
+            select.appendChild(optionDesc);
+        }
+        // Set the size of the select to show all options
+        select.size = select.options.length;
+
+    </script>
+
 </body>
 
 </html>
