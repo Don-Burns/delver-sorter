@@ -28,11 +28,10 @@ markers = [
 ]
 
 # pytest cov config
-## omit test dir and spark source code (which lives in /opt locally at least)
 [tool.coverage.run]
 command_line = "-m pytest --runslow tests"
-omit = ["tests/*", "/opt/*"]
-# source = ["braze"]
+## omit test dir
+omit = ["tests/*"]
 relative_files = true
 branch = true
 

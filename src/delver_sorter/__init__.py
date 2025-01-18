@@ -1,9 +1,11 @@
-from typing import TYPE_CHECKING, TypeAlias
-from pathlib import Path
 import argparse
+import logging
 from dataclasses import dataclass
-from pydantic import BaseModel
+from pathlib import Path
+from typing import TYPE_CHECKING, TypeAlias
+
 import jinja2
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     import sqlite3
@@ -12,8 +14,11 @@ else:
     # the lib is not typed so just use std lib for types, they are meant to be compatible
     import pysqlite3 as sqlite3
 
+logger = logging.getLogger(__name__)
+
 Connection: TypeAlias = sqlite3.Connection
 Cursor: TypeAlias = sqlite3.Cursor
+
 
 class Card(BaseModel):
     card_name: str
@@ -23,17 +28,19 @@ class Card(BaseModel):
     owned: int | None
     incoming: int | None
 
+
 @dataclass
 class Args:
     db: Path
+
 
 def get_args() -> Args:
     parser = argparse.ArgumentParser()
     parser.add_argument("db", type=Path)
     args = parser.parse_args()
 
-
     return Args(**args.__dict__)
+
 
 def dict_factory(cursor: Cursor, row: tuple[object, ...]) -> dict[str, object]:
     fields = [column[0] for column in cursor.description]
@@ -43,12 +50,11 @@ def dict_factory(cursor: Cursor, row: tuple[object, ...]) -> dict[str, object]:
     return {key: value for key, value in zip(fields, row)}
 
 
-
 def pull_card_data(conn: Connection) -> list[Card]:
 
     cur = conn.cursor()
     cur.execute(
-                """
+        """
                 WITH all_cards AS (
                     SELECT
                         dn.name AS card_name
@@ -101,11 +107,12 @@ def pull_card_data(conn: Connection) -> list[Card]:
                 GROUP BY card_name, cmc, color_id, mana_cost
                 ORDER BY color_id, cmc, card_name
                 """
-            )
+    )
     res = cur.fetchall()
     cur.close()
 
     return [Card.model_validate(row) for row in res]
+
 
 def build_html(cards: list[Card]) -> str:
     """
@@ -122,6 +129,27 @@ def build_html(cards: list[Card]) -> str:
     template = env.get_template("output.tmpl.html")
     return template.render(cards=cards)
 
+
+def trim_unchanged_cards(cards: list[Card]) -> list[Card]:
+    prev: Card | None = None
+    next_: Card | None = None
+    output: list[Card] = []
+    for i, c in enumerate(cards):
+        if i > 0:
+            prev = cards[i - 1]
+        if i < len(cards) - 1:
+            next_ = cards[i + 1]
+
+        if c.incoming is not None:
+            if prev is not None:
+                output.append(prev)
+            output.append(c)
+            if next_ is not None:
+                output.append(next_)
+
+    return output
+
+
 def main() -> int:
 
     args = get_args()
@@ -130,17 +158,21 @@ def main() -> int:
         print("Database file does not exist")
         return 1
 
+    logger.info("Reading data from %s", args.db)
     with sqlite3.connect(args.db) as conn:
         conn.row_factory = dict_factory
-        pull_card_data(conn)
+        card_data = pull_card_data(conn)
 
+    logger.info("Trimming unchanged cards")
+    card_data = trim_unchanged_cards(card_data)
     output_path = Path("output.html")
-
+    logger.info("Writing output to %s", output_path.absolute())
     with output_path.open("w", encoding="utf-8") as f:
-        f.write(build_html(pull_card_data(conn)))
+        f.write(build_html(card_data))
 
     return 0
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     raise SystemExit(main())
