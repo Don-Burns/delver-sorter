@@ -100,6 +100,10 @@
             return [str.slice(0, lastIndex), str.slice(lastIndex + 1)];
         }
 
+        /**
+         * Sort the table based on the selected columns
+         * @param {Array<string>} selectedCols An array of strings representing the selected columns for sorting
+         */
         function sortTable(selectedCols) {
             const table = document.getElementsByTagName("table")[0];
             const headerMap = getColumnNameHashMap(table);
@@ -128,12 +132,37 @@
             }
         }
 
+        /**
+         * Get the select element for sorting
+         * @returns {HTMLSelectElement} The select element for sorting
+         */
+        function getSortSelector() {
+            return document.getElementById('sortColumns');
+        }
+
+        /**
+         * Get the columns that are selected for sorting
+         * @returns {Array<string>} An array of strings representing the selected columns for sorting
+         */
+        function getSelectedSortColumns() {
+            const sortColumns = getSortSelector();
+            return Array.from(sortColumns.selectedOptions).map(option => option.value);
+        }
+
+        /**
+         * Update the text to show the selected columns for sorting
+         * @param {Array<string>} selectedCols An array of strings representing the selected columns for sorting
+         */
+        function updateSelectedColumnsText(selectedCols) {
+            document.getElementById('selectedColumns').textContent = `Sorting by: ${selectedCols.join(', ')}`;
+        }
+
         // Get the columns that are selected for sorting
-        const sortColumns = document.getElementById('sortColumns');
+        const sortColumns = getSortSelector();
         // Add a listener for changes to the selection
         sortColumns.addEventListener('change', () => {
-            const selectedCols = Array.from(sortColumns.selectedOptions).map(option => option.value);
-            document.getElementById('selectedColumns').textContent = `Sorting by: ${selectedCols.join(', ')}`;
+            const selectedCols = getSelectedSortColumns();
+            updateSelectedColumnsText(selectedCols);
             sortTable(selectedCols);
         });
     </script>
@@ -141,7 +170,7 @@
     <!-- Styling logic -->
     <script>
 
-        const select = document.getElementById('sortColumns');
+        const selector = getSortSelector();
         // Add the options based on the table headers
         const table = document.getElementsByTagName("table")[0];
         const thead = table.querySelector('thead');
@@ -151,15 +180,26 @@
             const optionAsc = document.createElement('option');
             optionAsc.value = `${columnName} asc`;
             optionAsc.textContent = `${columnName} (Ascending)`;
-            select.appendChild(optionAsc);
+            selector.appendChild(optionAsc);
 
             const optionDesc = document.createElement('option');
             optionDesc.value = `${columnName} desc`;
             optionDesc.textContent = `${columnName} (Descending)`;
-            select.appendChild(optionDesc);
+            selector.appendChild(optionDesc);
         }
         // Set the size of the select to show all options
-        select.size = select.options.length;
+        selector.size = selector.options.length;
+
+        // Select some options by default based on the option value
+        ['Color ID', 'CMC', 'Card Name'].forEach((header) => {
+            const option = selector.querySelector(`option[value="${header} asc"]`);
+            option.selected = true;
+        });
+        // Sort by defaults once selected
+        const selectedCols = getSelectedSortColumns();
+        // for some reason the onchange event doesn't trigger when modifying at this point?
+        sortTable(selectedCols);
+        updateSelectedColumnsText(selectedCols);
 
     </script>
 
