@@ -170,6 +170,9 @@ cython_debug/
 .vscode
 .devcontainer
 
-# scripts folder zip
-scripts.zip
-airflow/dags/de_s3_to_redshift_inc/config/slack.txt
+# delver sqlite dbs
+*.dlens
+*:Zone.Identifier
+
+# outputs
+*.html

@@ -17,7 +17,6 @@ Cursor: TypeAlias = sqlite3.Cursor
 
 class Card(BaseModel):
     card_name: str
-    card_id: int
     cmc: int
     color_id: int
     mana_cost: str
@@ -93,7 +92,6 @@ def pull_card_data(conn: Connection) -> list[Card]:
                 )
                 SELECT
                     card_name
-                    , MAX(card_id) AS card_id
                     , cmc
                     , color_id
                     , mana_cost
