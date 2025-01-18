@@ -21,6 +21,17 @@
 
         th {
             background-color: #f2f2f2;
+            cursor: pointer;
+        }
+
+        .asc:after {
+            content: " \25B2";
+            /* Black up-pointing triangle */
+        }
+
+        .desc:after {
+            content: " \25BC";
+            /* Black down-pointing triangle */
         }
     </style>
 </head>
@@ -29,12 +40,12 @@
     <table>
         <thead>
             <tr>
-                <th onclick="sortTable(0)">Card Name</th>
-                <th onclick="sortTable(1)">CMC</th>
-                <th onclick="sortTable(2)">Color ID</th>
-                <th onclick="sortTable(3)">Mana Cost</th>
-                <th onclick="sortTable(4)">Owned</th>
-                <th onclick="sortTable(5)">Incoming</th>
+                <th onclick="sortTable(0, this)">Card Name</th>
+                <th onclick="sortTable(1, this)">CMC</th>
+                <th onclick="sortTable(2, this)">Color ID</th>
+                <th onclick="sortTable(3, this)">Mana Cost</th>
+                <th onclick="sortTable(4, this)">Owned</th>
+                <th onclick="sortTable(5, this)">Incoming</th>
             </tr>
         </thead>
         <tbody>
@@ -52,38 +63,44 @@
     </table>
 
     <script>
-        function sortTable(n) {
-            var table, rows, switching, i, x, y, shouldSwitch;
-            table = document.getElementsByTagName("table")[0];
-            switching = true;
-            /*Make a loop that will continue until
-            no switching has been done:*/
-            while (switching) {
-                //start by saying: no switching is done:
-                switching = false;
-                rows = table.rows;
-                /*Loop through all table rows (except the
-                first, which contains table headers):*/
-                for (i = 1; i < (rows.length - 1); i++) {
-                    //start by saying there should be no switching:
-                    shouldSwitch = false;
-                    /*Get the two elements you want to compare,
-                    one from current row and one from the next:*/
-                    x = rows[i].getElementsByTagName("td")[n];
-                    y = rows[i + 1].getElementsByTagName("td")[n];
-                    //check if the two rows should switch place:
-                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                        //if so, mark as a switch and break the loop:
-                        shouldSwitch = true;
-                        break;
-                    }
+        let sortOrder = []; // Array to store sort order for each column (asc/desc)
+
+        function sortTable(n, th) {
+            // Clear previous sort order indicators
+            for (let i = 0; i < th.parentNode.cells.length; i++) {
+                th.parentNode.cells[i].classList.remove("asc");
+                th.parentNode.cells[i].classList.remove("desc");
+            }
+
+            // Toggle sort order
+            if (sortOrder[n] === 'asc') {
+                sortOrder[n] = 'desc';
+                th.classList.add("desc");
+            } else {
+                sortOrder[n] = 'asc';
+                th.classList.add("asc");
+            }
+
+            // Perform the sort
+            const table = document.getElementsByTagName("table")[0];
+            const rows = Array.from(table.rows).slice(1); // Exclude header row
+
+            rows.sort((a, b) => {
+                const cellA = a.cells[n];
+                const cellB = b.cells[n];
+                const valueA = cellA.innerHTML.toLowerCase();
+                const valueB = cellB.innerHTML.toLowerCase();
+
+                if (sortOrder[n] === 'asc') {
+                    return valueA.localeCompare(valueB);
+                } else {
+                    return valueB.localeCompare(valueA);
                 }
-                if (shouldSwitch) {
-                    /*If a switch has been marked, make the switch
-                    and mark that a switch has been done:*/
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                }
+            });
+
+            // Re-insert sorted rows
+            for (const row of rows) {
+                table.tBodies[0].appendChild(row);
             }
         }
     </script>
