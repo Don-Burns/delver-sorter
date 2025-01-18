@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Card List</title>
+    <style>
+        .red-highlight {
+            background-color: #FFCECE;
+            /* Light red highlight */
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Card Name</th>
+                <th>Card ID</th>
+                <th>CMC</th>
+                <th>Color ID</th>
+                <th>Mana Cost</th>
+                <th>Owned</th>
+                <th>Incoming</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for card in cards %}
+            <tr class="{% if card.owned is none %}red-highlight{% endif %}">
+                <td>{{ card.card_name }}</td>
+                <td>{{ card.card_id }}</td>
+                <td>{{ card.cmc }}</td>
+                <td>{{ card.color_id }}</td>
+                <td>{{ card.mana_cost }}</td>
+                <td>{% if card.owned %}{{ card.owned }}{% else %}Not Owned{% endif %}</td>
+                <td>{% if card.incoming %}{{ card.incoming }}{% else %}N/A{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>
