@@ -1,5 +1,6 @@
 import argparse
 import logging
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
@@ -20,10 +21,13 @@ Connection: TypeAlias = sqlite3.Connection
 Cursor: TypeAlias = sqlite3.Cursor
 
 
+WUBRG_PRIORITY_DICT = {"W": 1, "U": 2, "B": 3, "R": 4, "G": 5}
+
+
 class Card(BaseModel):
     card_name: str
     cmc: int
-    color_id: int
+    color: str
     mana_cost: str
     owned: int | None
     incoming: int | None
@@ -99,17 +103,19 @@ def pull_card_data(conn: Connection) -> list[Card]:
                 SELECT
                     card_name
                     , cmc
-                    , color_id
                     , mana_cost
                     , SUM(owned) AS owned
                     , SUM(incoming) AS incoming
                 FROM out_list
-                GROUP BY card_name, cmc, color_id, mana_cost
+                GROUP BY card_name, cmc, mana_cost
                 ORDER BY color_id, cmc, card_name
                 """
     )
     res = cur.fetchall()
     cur.close()
+
+    for row in res:
+        row["color"] = parse_color(row["mana_cost"])
 
     return [Card.model_validate(row) for row in res]
 
@@ -139,6 +145,13 @@ def trim_unchanged_cards(cards: list[Card]) -> list[Card]:
             prev = cards[i - 1]
         if i < len(cards) - 1:
             next_ = cards[i + 1]
+        else:
+            next_ = None
+
+        if prev is not None and prev.incoming is not None:
+            prev = None
+        if next_ is not None and next_.incoming is not None:
+            next_ = None
 
         if c.incoming is not None:
             if prev is not None:
@@ -150,18 +163,52 @@ def trim_unchanged_cards(cards: list[Card]) -> list[Card]:
     return output
 
 
+def sort_by_wubrg(s: Iterable[str]) -> str:
+    return "".join(sorted(s, key=lambda x: WUBRG_PRIORITY_DICT.get(x, 999)))
+
+
+def parse_color(card_cost: str) -> str:
+    out: set[str] = set()
+    for char in card_cost:
+        char = char.upper()
+        if char in "WUBRG":
+            out.add(char)
+
+    return sort_by_wubrg(out)
+
+
+def sort_cards_by_defaults(cards: list[Card]) -> list[Card]:
+    key_func: Callable[[Card], tuple[int, int, str]] = lambda x: (
+        sum(WUBRG_PRIORITY_DICT[c] + len(x.color) for c in x.color),
+        x.cmc,
+        x.card_name,
+    )
+
+    return sorted(
+        cards,
+        key=key_func,
+    )
+
+
 def main() -> int:
 
     args = get_args()
 
     if not args.db.exists():
-        print("Database file does not exist")
+        logger.error("Database file does not exist - file: %s", args.db)
         return 1
 
     logger.info("Reading data from %s", args.db)
     with sqlite3.connect(args.db) as conn:
         conn.row_factory = dict_factory
         card_data = pull_card_data(conn)
+
+    logger.info("Converting color_ids")
+    for card in card_data:
+        card.color = parse_color(card.mana_cost)
+
+    # TODO: remove the sorting once I figure out the HTML sorting issue
+    card_data = sort_cards_by_defaults(card_data)
 
     logger.info("Trimming unchanged cards")
     card_data = trim_unchanged_cards(card_data)

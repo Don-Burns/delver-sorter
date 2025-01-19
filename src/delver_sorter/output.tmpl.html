@@ -4,13 +4,17 @@
 <head>
     <title>Card List</title>
     <style>
-        .red-highlight {
-            background-color: #FFCECE;
-            /* Light red highlight */
+        * {
+            color: #FFFFFF;
+        }
+
+        body {
+            background-color: #000000;
         }
 
         table {
             border-collapse: collapse;
+            color: #FFFFFF;
         }
 
         th,
@@ -20,17 +24,15 @@
         }
 
         th {
-            background-color: #f2f2f2;
+            background-color: #4b4a4a;
         }
 
-        .asc:after {
-            content: " \25B2";
-            /* Black up-pointing triangle */
+        select {
+            background-color: #4a4a4b;
         }
 
-        .desc:after {
-            content: " \25BC";
-            /* Black down-pointing triangle */
+        .red-highlight {
+            background-color: #7a1212;
         }
     </style>
 </head>
@@ -48,7 +50,7 @@
             <tr>
                 <th>Card Name</th>
                 <th>CMC</th>
-                <th>Color ID</th>
+                <th>Color</th>
                 <th>Mana Cost</th>
                 <th>Owned</th>
                 <th>Incoming</th>
@@ -56,10 +58,10 @@
         </thead>
         <tbody>
             {% for card in cards %}
-            <tr class="{% if card.owned is none %}red-highlight{% endif %}">
+            <tr class="{% if card.incoming is not none %}red-highlight{% endif %}">
                 <td>{{ card.card_name }}</td>
                 <td>{{ card.cmc }}</td>
-                <td>{{ card.color_id }}</td>
+                <td>{{ card.color }}</td>
                 <td>{{ card.mana_cost }}</td>
                 <td>{% if card.owned %}{{ card.owned }}{% else %}0{% endif %}</td>
                 <td>{% if card.incoming %}{{ card.incoming }}{% else %}0{% endif %}</td>
@@ -190,15 +192,16 @@
         // Set the size of the select to show all options
         selector.size = selector.options.length;
 
+	// TODO: Fix the sorting to take order of selection into account
         // Select some options by default based on the option value
-        ['Color ID', 'CMC', 'Card Name'].forEach((header) => {
-            const option = selector.querySelector(`option[value="${header} asc"]`);
-            option.selected = true;
-        });
+        // ['Color', 'CMC', 'Card Name'].forEach((header) => {
+        // const option = selector.querySelector(`option[value="${header} asc"]`);
+        //option.selected = true;
+        //});
         // Sort by defaults once selected
-        const selectedCols = getSelectedSortColumns();
+        // const selectedCols = getSelectedSortColumns();
         // for some reason the onchange event doesn't trigger when modifying at this point?
-        sortTable(selectedCols);
+        //sortTable(selectedCols);
         updateSelectedColumnsText(selectedCols);
 
     </script>
