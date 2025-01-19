@@ -125,6 +125,140 @@ def gen_card(
             ],
             id="Test Multi color order 2",
         ),
+        pytest.param(
+            [
+                gen_card(
+                    card_name="Baleful Strix", cmc=2, color="UB", owned=1, incoming=1
+                ),
+                gen_card(
+                    card_name="Boros Charm", cmc=2, color="WR", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Heartflame Duelist // Heartflame Slash",
+                    cmc=2,
+                    color="WR",
+                    owned=1,
+                    incoming=0,
+                ),
+                gen_card(
+                    card_name="Inkfathom Witch", cmc=2, color="UB", owned=0, incoming=1
+                ),
+                gen_card(
+                    card_name="Lightning Helix", cmc=2, color="WR", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Lightning Helix", cmc=2, color="WR", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Likeness Looter", cmc=2, color="UB", owned=0, incoming=1
+                ),
+                gen_card(
+                    card_name="Mask of Riddles", cmc=2, color="UB", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Mirror-Shield Hoplite",
+                    cmc=2,
+                    color="WR",
+                    owned=1,
+                    incoming=0,
+                ),
+                gen_card(
+                    card_name="Obyra, Dreaming Duelist",
+                    cmc=2,
+                    color="UB",
+                    owned=0,
+                    incoming=1,
+                ),
+                gen_card(card_name="Rip Apart", cmc=2, color="WR", owned=1, incoming=0),
+            ],
+            [
+                gen_card(
+                    card_name="Baleful Strix", cmc=2, color="UB", owned=1, incoming=1
+                ),
+                gen_card(
+                    card_name="Inkfathom Witch", cmc=2, color="UB", owned=0, incoming=1
+                ),
+                gen_card(
+                    card_name="Likeness Looter", cmc=2, color="UB", owned=0, incoming=1
+                ),
+                gen_card(
+                    card_name="Mask of Riddles", cmc=2, color="UB", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Obyra, Dreaming Duelist",
+                    cmc=2,
+                    color="UB",
+                    owned=0,
+                    incoming=1,
+                ),
+                gen_card(
+                    card_name="Boros Charm", cmc=2, color="WR", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Heartflame Duelist // Heartflame Slash",
+                    cmc=2,
+                    color="WR",
+                    owned=1,
+                    incoming=0,
+                ),
+                gen_card(
+                    card_name="Lightning Helix", cmc=2, color="WR", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Lightning Helix", cmc=2, color="WR", owned=1, incoming=0
+                ),
+                gen_card(
+                    card_name="Mirror-Shield Hoplite",
+                    cmc=2,
+                    color="WR",
+                    owned=1,
+                    incoming=0,
+                ),
+                gen_card(card_name="Rip Apart", cmc=2, color="WR", owned=1, incoming=0),
+            ],
+            id="Test Multi color order 3",
+        ),
+        pytest.param(
+            [
+                gen_card(
+                    card_name="Nature's Will", cmc=4, color="G", owned=0, incoming=1
+                ),
+                gen_card(
+                    card_name="Ruxa, Patient Professor",
+                    cmc=4,
+                    color="G",
+                    owned=1,
+                    incoming=0,
+                ),
+                gen_card(
+                    card_name="Neva, Stalked by Nightmares",
+                    cmc=4,
+                    color="WB",
+                    owned=1,
+                    incoming=0,
+                ),
+            ],
+            [
+                gen_card(
+                    card_name="Nature's Will", cmc=4, color="G", owned=0, incoming=1
+                ),
+                gen_card(
+                    card_name="Ruxa, Patient Professor",
+                    cmc=4,
+                    color="G",
+                    owned=1,
+                    incoming=0,
+                ),
+                gen_card(
+                    card_name="Neva, Stalked by Nightmares",
+                    cmc=4,
+                    color="WB",
+                    owned=1,
+                    incoming=0,
+                ),
+            ],
+            id="Test Multi color order 3",
+        ),
     ),
 )
 def test_sort_by_defaults(input_: list[Card], expected: list[Card]):

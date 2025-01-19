@@ -1,6 +1,6 @@
 import argparse
 import logging
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
@@ -31,6 +31,8 @@ class Card(BaseModel):
     mana_cost: str
     owned: int | None
     incoming: int | None
+    # For debugging
+    sort_score: tuple[int, int, str] | None = None
 
 
 @dataclass
@@ -177,16 +179,27 @@ def parse_color(card_cost: str) -> str:
     return sort_by_wubrg(out)
 
 
-def sort_cards_by_defaults(cards: list[Card]) -> list[Card]:
-    key_func: Callable[[Card], tuple[int, int, str]] = lambda x: (
-        sum(WUBRG_PRIORITY_DICT[c] + len(x.color) for c in x.color),
-        x.cmc,
-        x.card_name,
+SortScore: TypeAlias = tuple[int, int, str]
+
+
+def _calculate_sort_score(card: Card) -> SortScore:
+
+    return (
+        # Need to prevent sort order from conflicting with certain combinations of colours
+        # while also make sure that more colours are sorted after less colours
+        sum((WUBRG_PRIORITY_DICT[c] ** 2) for c in card.color) * len(card.color) ** 10,
+        card.cmc,
+        card.card_name,
     )
+
+
+def sort_cards_by_defaults(cards: list[Card]) -> list[Card]:
+    # for card in cards:
+    #     card.sort_score = key_func(card)
 
     return sorted(
         cards,
-        key=key_func,
+        key=_calculate_sort_score,
     )
 
 
@@ -209,6 +222,9 @@ def main() -> int:
 
     # TODO: remove the sorting once I figure out the HTML sorting issue
     card_data = sort_cards_by_defaults(card_data)
+    # add sort score
+    for card in card_data:
+        card.sort_score = _calculate_sort_score(card)
 
     logger.info("Trimming unchanged cards")
     card_data = trim_unchanged_cards(card_data)
