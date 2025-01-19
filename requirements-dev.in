@@ -3,3 +3,7 @@ mypy
 black
 isort
 pip-tools
+pre-commit
+pytest
+pytest-cov
+tox

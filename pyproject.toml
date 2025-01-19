@@ -29,7 +29,7 @@ markers = [
 
 # pytest cov config
 [tool.coverage.run]
-command_line = "-m pytest --runslow tests"
+command_line = "-m pytest tests"
 ## omit test dir
 omit = ["tests/*"]
 relative_files = true
